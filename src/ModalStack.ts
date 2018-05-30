@@ -75,7 +75,7 @@ export default class ModalStack {
   _onWindowClick(event: MouseEvent) {
     const modal = this._frontMostModal;
     const eventTarget = <Element>event.target;
-    if(modal && !eventTarget.closest('.modal__content') && modal.dataset.modalDismissable) {
+    if(modal && !eventTarget.closest('.micromodal__modal__content') && modal.dataset.modalDismissable) {
       this._rejectModal(<string>modal.dataset.modalId, 'clickedOutside');
       event.preventDefault();
     }
@@ -83,7 +83,7 @@ export default class ModalStack {
 
   _addModalToDom(id: string, html: string, dismissable: boolean) {
     const modalContent = document.createElement('div');
-    modalContent.classList.add('modal__content');
+    modalContent.classList.add('micromodal__modal__content');
     modalContent.innerHTML = html;
     for(const element of modalContent.querySelectorAll('[data-modal-close]')) {
       element.addEventListener('click', () => {
@@ -92,7 +92,7 @@ export default class ModalStack {
     }
 
     const modalWrapper = document.createElement('div');
-    modalWrapper.classList.add('modal');
+    modalWrapper.classList.add('micromodal__modal');
     modalWrapper.dataset.modalId = id;
     if(dismissable) {
       modalWrapper.dataset.modalDismissable = dismissable.toString();
