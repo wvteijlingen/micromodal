@@ -1,7 +1,12 @@
 declare global {
-  interface Window { modalcallbacks: any; }
+  interface Window { micromodals: any; }
   interface Promise<T> { finally: Function; }
 }
+
+type ModalResult = {
+  dismissed: boolean,
+  value: any | undefined
+};
 
 export default class ModalStack {
 	_stackId: string;
@@ -27,32 +32,50 @@ export default class ModalStack {
    */
   openModal({ url, dismissable = true }: { url: string, dismissable: boolean }) {
     const id = this._generateId();
-    return new Promise((resolve, reject) => {
-      this._registerCallback(id, resolve, reject);
+
+    const promise = new Promise<ModalResult>((resolve, reject) => {
+      this._registerCallback(id, resolve);
       const requestUrl = new URL(url);
       requestUrl.searchParams.set('callback', id)
       fetch(requestUrl.toString()).then(response => response.text()).then(html => {
         this._addModalToDom(id, html, dismissable);
       });
-    }).finally(() => {
+    })
+
+    promise.finally(() => {
       this._unregisterCallback(id);
       this._removeModalFromDom(id);
     });
+
+    return promise;
   }
 
-  _rejectModal(id: string, value: any) {
-    window.modalcallbacks[id]._reject(value);
+  closeModal(id: string, dismissed: boolean, value: any | undefined = undefined) {
+    if(dismissed) {
+      window.micromodals[id]._dismiss();
+    } else {
+      window.micromodals[id].close(value);
+    }
   }
 
-  _registerCallback(id: string, resolve, reject) {
-    window.modalcallbacks = window.modalcallbacks || {};
-    const resolveWithParsedJSON = (value: string) => resolve(JSON.parse(value));
-    window.modalcallbacks[id] = { close: resolveWithParsedJSON, _resolve: resolveWithParsedJSON, _reject: reject }
-    return id;
+  _registerCallback(id: string, resolve) {
+    window.micromodals = window.micromodals || {};
+    window.micromodals[id] = {
+      close: (value) => {
+        let parsedValue;
+        try {
+          parsedValue = JSON.parse(value)
+        } catch {
+          parsedValue = value;
+        }
+        resolve({ dismissed: false, value: parsedValue })
+      },
+      _dismiss: () => resolve({ dismissed: true })
+    };
   }
 
   _unregisterCallback(id: string) {
-    delete window.modalcallbacks[id];
+    delete window.micromodals[id];
   }
 
   _generateId(): string {
@@ -66,7 +89,7 @@ export default class ModalStack {
     if(event.which === 27) { // Escape key
       const modal = this._frontMostModal;
       if(modal && modal.dataset.modalDismissable) {
-        this._rejectModal(<string>modal.dataset.modalId, 'pressedEscape');
+        this.closeModal(<string>modal.dataset.modalId, true);
         event.preventDefault();
       }
     }
@@ -76,7 +99,7 @@ export default class ModalStack {
     const modal = this._frontMostModal;
     const eventTarget = <Element>event.target;
     if(modal && !eventTarget.closest('.micromodal__modal__content') && modal.dataset.modalDismissable) {
-      this._rejectModal(<string>modal.dataset.modalId, 'clickedOutside');
+      this.closeModal(<string>modal.dataset.modalId, true);
       event.preventDefault();
     }
   }
@@ -87,7 +110,7 @@ export default class ModalStack {
     modalContent.innerHTML = html;
     for(const element of modalContent.querySelectorAll('[data-modal-close]')) {
       element.addEventListener('click', () => {
-        window.modalcallbacks[id]._resolve(<string>(<HTMLElement>element).dataset.modalCloseValue);
+        this.closeModal(id, false, (<HTMLElement>element).dataset.modalClose)
       });
     }
 

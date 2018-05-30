@@ -1,6 +1,6 @@
 # micromodal
 
-A small library to load and show modals using AJAX.
+A small library to load and show modals using `fetch`, and handle their return values using Promises.
 
 ## Example
 
@@ -13,9 +13,11 @@ const modals = new micromodal.ModalStack({ stackid: 'global' });
 modals.openModal({
   url: 'http://example.com/modals/terms-of-service',
   dismissable: true
-}).then(accepted => {
-  if(accepted) {
-     alert('You accepted our terms of service');
+}).then(result => {
+  if(result.dismissed) {
+    alert('You dismissed the modal')
+  } else if(result.value === 'accepted') {
+    alert('You accepted our terms of service');
   } else {
     alert('You rejected our terms of service');
   }
@@ -37,32 +39,34 @@ window.modals = new micromodal.ModalStack({ stackid: 'global' });
 
 3. Open a modal by calling `openModal`, passing a URL that contains the modal HTML.
 micromodal will fetch this HTML and display it in a modal in the modal stack.
-`openModal` will return a Promise that will be resolved or rejected when the modal closes.
-http
+`openModal` will return a Promise that will be resolved when the modal closes.
+
 ```javascript
 const options = {
-  url: 'http://example.com/modals/terms-of-service',
-  dismissable: true
+  url: 'http://example.com/modals/terms-of-service', // The URL that returns the modal content.
+  dismissable: true // Whether the modal can be dismissed by clicking outside it or pressing ESC.
 };
 
-window.modals.openModal(options).then(accepted => {
-  if(accepted) {
-     alert('You accepted our terms of service');
+window.modals.openModal(options).then(result => {
+  if(result.dismissed) {
+    alert('You dismissed the modal')
+  } else if(result.value === 'accepted') {
+    alert('You accepted our terms of service');
   } else {
     alert('You rejected our terms of service');
   }
 });
 ```
 
-## Why does `openModal` return a promise?
-Each modal can return a value by resolving a promise. For example: A modal that asks for confirmation (Are you sure?),
-can resolve with `true` or `false` depending on whether the user clicked 'yes' or 'no'.
-A modal that prompts for an input can for example resolve with the string entered by the user,
-or false when the user clicks cancel. You can decide what return value makes the most sense for the modal.
+## #openModal returns a promise
+Each modal can return a value when it is closed. For example: A modal that asks for confirmation,
+can return `true` or `false` depending on whether the user clicked 'yes' or 'no'.
+A modal that prompts for text input can resolve with the string entered by the user, or `false` when the user clicks cancel.
+You can decide what return value makes the most sense for each modal.
 
-You can only resolve the promise, not reject it. Even when the user clicks 'cancel',
-because it is still a successful interaction with the modal. A promise is only rejected by micromodal itself when
-the user dismisses the modal by clicking outside of it, or pressing escape.
+The fulfilled value of the promise contains two properties:
+- `dismissed`: This is `true` if the modal is dimissed, i.e. the user clicked outside of the modal or pressed the escape key on the keyboard.
+- `value`: The value returned by the model. This will be `undefined` if the modal is dismissed.
 
 ## Closing a modal (with an optional return value)
 Each element in your modal HTML that has a `data-modal-close` attribute will automatically close the modal when clicked.
@@ -80,7 +84,7 @@ you can use a callback that micromodal provides for you. When micromodal fetches
 You can use this parameter to close the modal from inside:
 
 ```javascript
-window.modalcallbacks(callbackParameter).close('some value');
+window.micromodals(callbackParameter).close('some value');
 ```
 
 ## Using multiple modal stacks
