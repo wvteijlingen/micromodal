@@ -81,9 +81,9 @@ You can optionally give this attribute a value, which will then be the result of
 <button data-modal-close>Cancel</button>
 ```
 
-## Programatically closing a modal (with an optional return value)
+## Programmatically closing a modal (with an optional return value)
 You can also close a modal by dispatching an event from within the modal. You can use this if your return values are not static,
-or you want to close the modal programatically.
+or you want to close the modal programmatically.
 
 Dispatch a bubbling event named `closemodal` from within the modal. Set `bubbles` to true to make sure it reaches micromodal.
 You can use the `detail` attribute to pass your value.
