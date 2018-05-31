@@ -6,9 +6,11 @@ A small library to load and show modals using `fetch`, and handle their return v
 
 ```javascript
 // Somewhere in your HTML:
-// <div class="modals" data-modals-stackid="global"></div>
+// <div class="modals" id="modals-go-here"></div>
 
-const modals = new micromodal.ModalStack({ stackid: 'global' });
+const modals = new micromodal.ModalStack({
+  container: document.getElementById('modals-go-here')
+});
 
 modals.openModal({
   url: 'http://example.com/modals/terms-of-service',
@@ -26,21 +28,22 @@ modals.openModal({
 
 ## Usage
 
-1. Create a div in your markup where the modals will be displayed. Give this div a `data-modal-stack` attribute.
+1. Create an element in your markup where the modals will be displayed.
 ```html
-<div class="modals" data-modals-stackid="global"></div>
+<div class="modals" id="modals-go-here"></div>
 ```
 
-2. Initialize a ModalStack class with the stackid you entered in the HTML. If you want,
-you can make this a global variable so you can open modals throughout your application.
+2. Initialize a ModalStack class, passing in the element where the modals will be displayed.
+If you want you can make this instance a global variable so you can open modals throughout your application.
 ```javascript
-window.modals = new micromodal.ModalStack({ stackid: 'global' });
+window.modals = new micromodal.ModalStack({
+  container: document.getElementById('modals-go-here')
+});
 ```
 
 3. Open a modal by calling `openModal`, passing a URL that contains the modal HTML.
 micromodal will fetch this HTML and display it in a modal in the modal stack.
 `openModal` will return a Promise that will be resolved when the modal closes.
-
 ```javascript
 const options = {
   url: 'http://example.com/modals/terms-of-service', // The URL that returns the modal content.

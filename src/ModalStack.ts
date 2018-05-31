@@ -1,22 +1,28 @@
-declare global {
-  interface Window { micromodals: any; }
-  interface Promise<T> { finally: Function; }
+import { ModalResult } from './ModalResult';
+
+type ModalCallback = {
+  close: (any) => void,
+  _dismiss: () => void
 }
 
-type ModalResult = {
-  dismissed: boolean,
-  value: any | undefined
-};
+declare global {
+  interface Window {
+    micromodals: Map<string, ModalCallback>
+  }
+  interface Promise<T> {
+    finally: Function;
+  }
+}
 
 export default class ModalStack {
-	_stackId: string;
+  _modalsContainer: HTMLElement;
 
   /**
    * @param {object} [Options]
-   * @param {string} [Options.stackId='global']  The name of the modal stack in the DOM.
+   * @param {string} [Options.container]  The element that will contain the modals in the DOM.
    */
-  constructor({ stackId = 'global' } = {}) {
-    this._stackId = stackId;
+  constructor({ container }: { container: HTMLElement }) {
+    this._modalsContainer = container;
     window.addEventListener('keypress', this._onWindowKeyPress.bind(this));
     window.addEventListener('click', this._onWindowClick.bind(this));
   }
@@ -28,10 +34,10 @@ export default class ModalStack {
    * @param {string}  Options.url                The url from which to load the modal HTML.
    * @param {boolean} [Options.dismissable=true] Whether to dismiss the modal when the user presses escape, or clicks outside of it.
    *
-   * @return {Promise} A promise that is resolved when the modal closes, or rejected when the modal is dismissed.
+   * @return {Promise} A promise that is fulfilled when the modal closes.
    */
   openModal({ url, dismissable = true }: { url: string, dismissable: boolean }) {
-    const id = this._generateId();
+    const id = this._generateModalId();
 
     const promise = new Promise<ModalResult>((resolve, reject) => {
       this._registerCallback(id, resolve);
@@ -50,7 +56,7 @@ export default class ModalStack {
     return promise;
   }
 
-  closeModal(id: string, dismissed: boolean, value: any | undefined = undefined) {
+  closeModal(id: string, dismissed: boolean, value?: any) {
     if(dismissed) {
       window.micromodals[id]._dismiss();
     } else {
@@ -59,7 +65,7 @@ export default class ModalStack {
   }
 
   _registerCallback(id: string, resolve) {
-    window.micromodals = window.micromodals || {};
+    window.micromodals = window.micromodals || new Map();
     window.micromodals[id] = {
       close: (value) => {
         let parsedValue;
@@ -75,10 +81,10 @@ export default class ModalStack {
   }
 
   _unregisterCallback(id: string) {
-    delete window.micromodals[id];
+    window.micromodals.delete(id);
   }
 
-  _generateId(): string {
+  _generateModalId(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
@@ -108,6 +114,7 @@ export default class ModalStack {
     const modalContent = document.createElement('div');
     modalContent.classList.add('micromodal__modal__content');
     modalContent.innerHTML = html;
+    modalContent.setAttribute('role', 'dialog');
     for(const element of modalContent.querySelectorAll('[data-modal-close]')) {
       element.addEventListener('click', () => {
         this.closeModal(id, false, (<HTMLElement>element).dataset.modalClose)
@@ -141,15 +148,7 @@ export default class ModalStack {
     return this._modalsContainer.querySelector(`[data-modal-id="${id}"]`);
   }
 
-  get _modalsContainer(): HTMLElement {
-    const container = document.querySelector(`[data-modals-stackid="${this._stackId}"]`);
-    if(container instanceof HTMLElement === false) {
-      throw `Modal container with stack-id ${this._stackId} does not exist.`;
-    }
-    return <HTMLElement>container;
-  }
-
-  get _frontMostModal(): HTMLElement {
+  get _frontMostModal(): HTMLElement | null {
     return <HTMLElement>this._modalsContainer.lastElementChild;
   }
 }
