@@ -13,9 +13,12 @@
     "typescript": "^2.8.3"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && cp src/micromodal.css dist/micromodal.css",
     "watch": "rollup -c -w",
     "serve-example": "yarn build && yarn http-server example",
     "prepare": "npm run-script build"
+  },
+  "dependencies": {
+    "rollup-plugin-terser": "^1.0.1"
   }
 }
