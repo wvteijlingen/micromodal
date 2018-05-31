@@ -6,7 +6,8 @@
   "author": "Ward van Teijlingen <w.van.teijlingen@gmail.com>",
   "license": "MIT",
   "private": false,
-  "dependencies": {
+  "devDependencies": {
+    "http-server": "^0.11.1",
     "rollup": "^0.59.4",
     "rollup-plugin-typescript2": "^0.14.0",
     "typescript": "^2.8.3"
@@ -14,6 +15,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
-    "prepare": "build"
+    "serve-example": "yarn build && yarn http-server example",
+    "prepare": "npm run-script build"
   }
 }

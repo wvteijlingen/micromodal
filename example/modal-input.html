@@ -1,0 +1,12 @@
+<h1>Who are you?</h1>
+<form id="who-are-you-form">
+  <input name="name" required></input>
+  <a href="#" data-modal-close>Cancel</a>
+  <input type="submit" value="Submit">
+</form>
+<script type="text/javascript">
+document.getElementById('who-are-you-form').addEventListener('submit', function(event) {
+  this.dispatchEvent(new CustomEvent("closemodal", { detail: event.target.name.value, bubbles: true }));
+  event.preventDefault();
+});
+</script>

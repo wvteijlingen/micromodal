@@ -1,0 +1,64 @@
+html, body {
+  height: 100%;
+}
+
+.modals {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  animation: fade-in 0.3s ease;
+}
+
+.modals:empty {
+  display: none;
+}
+
+.micromodal__modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.micromodal__modal:last-child {
+  opacity: 1;
+}
+
+.micromodal__modal__content {
+  animation: modal-open 0.4s linear;
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 0 22px 0 rgba(0,0,0,.05);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Generated with Bounce.js. Edit at https://goo.gl/jDx5Eb */
+@keyframes modal-open {
+  0% { transform: matrix3d(0.6, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  7.61% { transform: matrix3d(0.815, 0, 0, 0, 0, 0.815, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  11.41% { transform: matrix3d(0.895, 0, 0, 0, 0, 0.895, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  15.12% { transform: matrix3d(0.953, 0, 0, 0, 0, 0.953, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  18.92% { transform: matrix3d(0.992, 0, 0, 0, 0, 0.992, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  22.72% { transform: matrix3d(1.015, 0, 0, 0, 0, 1.015, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  30.23% { transform: matrix3d(1.029, 0, 0, 0, 0, 1.029, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  50.25% { transform: matrix3d(1.006, 0, 0, 0, 0, 1.006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  70.27% { transform: matrix3d(0.999, 0, 0, 0, 0, 0.999, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+  100% { transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+}

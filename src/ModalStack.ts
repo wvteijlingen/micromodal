@@ -6,9 +6,6 @@ type ModalCallback = {
 }
 
 declare global {
-  interface Window {
-    micromodals: Map<string, ModalCallback>
-  }
   interface Promise<T> {
     finally: Function;
   }
@@ -40,16 +37,19 @@ export default class ModalStack {
     const id = this._generateModalId();
 
     const promise = new Promise<ModalResult>((resolve, reject) => {
-      this._registerCallback(id, resolve);
-      const requestUrl = new URL(url);
-      requestUrl.searchParams.set('callback', id)
-      fetch(requestUrl.toString()).then(response => response.text()).then(html => {
-        this._addModalToDom(id, html, dismissable);
+      fetch(url).then(response => response.text()).then(html => {
+        const modalElement = this._addModalToDom(id, html, dismissable);
+        modalElement.addEventListener('closemodal', (event: CustomEvent) => {
+          resolve({ dismissed: false, value: event.detail });
+        });
+
+        modalElement.addEventListener('dismissmodal', (event: CustomEvent) => {
+          resolve({ dismissed: true });
+        });
       });
     })
 
     promise.finally(() => {
-      this._unregisterCallback(id);
       this._removeModalFromDom(id);
     });
 
@@ -57,31 +57,20 @@ export default class ModalStack {
   }
 
   closeModal(id: string, dismissed: boolean, value?: any) {
-    if(dismissed) {
-      window.micromodals[id]._dismiss();
-    } else {
-      window.micromodals[id].close(value);
+    const modal = this._findModalWithId(id);
+    if(!modal) {
+      return;
     }
-  }
 
-  _registerCallback(id: string, resolve) {
-    window.micromodals = window.micromodals || new Map();
-    window.micromodals[id] = {
-      close: (value) => {
-        let parsedValue;
-        try {
-          parsedValue = JSON.parse(value)
-        } catch {
-          parsedValue = value;
-        }
-        resolve({ dismissed: false, value: parsedValue })
-      },
-      _dismiss: () => resolve({ dismissed: true })
-    };
-  }
+    const eventName = dismissed ? 'dismissmodal' : 'closemodal';
+    let eventDetail;
+    try {
+      eventDetail = JSON.parse(value)
+    } catch {
+      eventDetail = value;
+    }
 
-  _unregisterCallback(id: string) {
-    window.micromodals.delete(id);
+    modal.dispatchEvent(new CustomEvent(eventName, { detail: eventDetail , bubbles: true }));
   }
 
   _generateModalId(): string {
@@ -111,16 +100,21 @@ export default class ModalStack {
   }
 
   _addModalToDom(id: string, html: string, dismissable: boolean) {
+    // Create content
     const modalContent = document.createElement('div');
     modalContent.classList.add('micromodal__modal__content');
-    modalContent.innerHTML = html;
     modalContent.setAttribute('role', 'dialog');
+    modalContent.appendChild(this._convertHTMLtoDocumentFragment(html));
+
+    // Add listeners for nodes with data-modal-close attribute
     for(const element of modalContent.querySelectorAll('[data-modal-close]')) {
-      element.addEventListener('click', () => {
+      element.addEventListener('click', event => {
         this.closeModal(id, false, (<HTMLElement>element).dataset.modalClose)
+        event.preventDefault();
       });
     }
 
+    // Create wrapper
     const modalWrapper = document.createElement('div');
     modalWrapper.classList.add('micromodal__modal');
     modalWrapper.dataset.modalId = id;
@@ -130,6 +124,26 @@ export default class ModalStack {
     modalWrapper.appendChild(modalContent);
 
     this._modalsContainer.appendChild(modalWrapper);
+
+    return modalWrapper;
+  }
+
+  _convertHTMLtoDocumentFragment(html: string): DocumentFragment {
+    const fragment = document.createDocumentFragment();
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+
+    for(const node of tmp.childNodes) {
+      let newNode;
+      if(node instanceof HTMLElement && node.tagName.toLowerCase() === 'script') {
+        newNode = document.createElement('script');
+        newNode.innerHTML = node.innerHTML;
+      } else {
+        newNode = node;
+      }
+      fragment.appendChild(newNode);
+    }
+    return fragment;
   }
 
   _removeModalFromDom(id: string) {

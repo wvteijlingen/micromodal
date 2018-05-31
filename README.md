@@ -82,12 +82,15 @@ You can optionally give this attribute a value, which will then be the result of
 ```
 
 ## Programatically closing a modal (with an optional return value)
-If your return values are not static, or you want to close the modal programatically from within the modal,
-you can use a callback that micromodal provides for you. When micromodal fetches your modal markup, it passes a GET parameter called `callback`.
-You can use this parameter to close the modal from inside:
+You can also close a modal by dispatching an event from within the modal. You can use this if your return values are not static,
+or you want to close the modal programatically.
+
+Dispatch a bubbling event named `closemodal` from within the modal. Set `bubbles` to true to make sure it reaches micromodal.
+You can use the `detail` attribute to pass your value.
 
 ```javascript
-window.micromodals(callbackParameter).close('some value');
+// From somewhere inside the modal
+this.dispatchEvent(new CustomEvent("closemodal", { detail: 'some value', bubbles: true }));
 ```
 
 ## Using multiple modal stacks
