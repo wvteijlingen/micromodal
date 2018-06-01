@@ -4,6 +4,10 @@ A small library to load and show modals using `fetch`, and handle their return v
 
 ## Example
 
+1. Clone this repository.
+2. Run `npm install`
+3. Run `npm run example`
+
 ```javascript
 // Somewhere in your HTML:
 // <div class="modals" id="modals-go-here"></div>
@@ -12,18 +16,18 @@ const modals = new micromodal.ModalStack({
   container: document.getElementById('modals-go-here')
 });
 
-modals.openModal({
+const result = await modals.openModal({
   url: 'http://example.com/modals/terms-of-service',
   dismissable: true
-}).then(result => {
-  if(result.dismissed) {
-    alert('You dismissed the modal')
-  } else if(result.value === 'accepted') {
-    alert('You accepted our terms of service');
-  } else {
-    alert('You rejected our terms of service');
-  }
 });
+
+if(result.dismissed) {
+  alert('You dismissed the modal')
+} else if(result.value === 'accepted') {
+  alert('You accepted our terms of service');
+} else {
+  alert('You rejected our terms of service');
+}
 ```
 
 ## Usage

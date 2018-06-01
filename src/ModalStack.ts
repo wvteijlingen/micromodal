@@ -1,16 +1,5 @@
 import { ModalResult } from './ModalResult';
 
-type ModalCallback = {
-  close: (any) => void,
-  _dismiss: () => void
-}
-
-declare global {
-  interface Promise<T> {
-    finally: Function;
-  }
-}
-
 export default class ModalStack {
   _modalsContainer: HTMLElement;
 
@@ -21,19 +10,19 @@ export default class ModalStack {
   constructor({ container }: { container: HTMLElement }) {
     this._modalsContainer = container;
     window.addEventListener('keypress', this._onWindowKeyPress.bind(this));
-    window.addEventListener('click', this._onWindowClick.bind(this));
+    container.addEventListener('click', this._onWindowClick.bind(this));
   }
 
   /**
    * Opens a modal, loading it from the given URL.
    *
+   * @param {string}  url                The url from which to load the modal HTML.
    * @param {object}  Options
-   * @param {string}  Options.url                The url from which to load the modal HTML.
    * @param {boolean} [Options.dismissable=true] Whether to dismiss the modal when the user presses escape, or clicks outside of it.
    *
    * @return {Promise} A promise that is fulfilled when the modal closes.
    */
-  openModal({ url, dismissable = true }: { url: string, dismissable: boolean }) {
+  openModal(url: string, { dismissable }: {dismissable: boolean } = { dismissable: true }): Promise<ModalResult> {
     const id = this._generateModalId();
 
     const promise = new Promise<ModalResult>((resolve, reject) => {
@@ -47,9 +36,12 @@ export default class ModalStack {
           resolve({ dismissed: true });
         });
       });
-    })
+    });
 
-    promise.finally(() => {
+    // NOTE: This would be better implemented using `finally`, but that is not supported everywhere yet.
+    promise.then(() => {
+      this._removeModalFromDom(id);
+    }, () => {
       this._removeModalFromDom(id);
     });
 
@@ -109,7 +101,8 @@ export default class ModalStack {
     // Add listeners for nodes with data-modal-close attribute
     for(const element of modalContent.querySelectorAll('[data-modal-close]')) {
       element.addEventListener('click', event => {
-        this.closeModal(id, false, (<HTMLElement>element).dataset.modalClose)
+        const value =  (<HTMLElement>element).dataset.modalClose || undefined;
+        this.closeModal(id, false, value)
         event.preventDefault();
       });
     }
@@ -152,10 +145,6 @@ export default class ModalStack {
       throw `Modal with id ${id} does not exist in the DOM.`;
     }
     this._modalsContainer.removeChild(modalElement);
-    if(this._modalsContainer.children.length === 0) {
-      // @ts-ignore
-      this._modalsContainer.innerHTML = null;
-    }
   }
 
   _findModalWithId(id: string): HTMLElement | null {

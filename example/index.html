@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>micromodal</title>
+    <title>micromodal examples</title>
     <script src="micromodal.dist.js"></script>
     <link rel="stylesheet" href="micromodal.dist.css">
   </head>
@@ -14,28 +14,27 @@
         container: document.getElementById('modals')
       });
 
-      document.getElementById('button-confirmation').addEventListener('click', () => {
-        modals.openModal({
-          url: 'http://127.0.0.1:8080/modal-confirm.html',
-          dismissable: true
-        }).then(result => {
-          if(result.dismissed) {
-            alert('You dismissed the modal');
-          } else if(result.value === true) {
-            alert('You clicked yes');
-          } else {
-            alert('You clicked no');
-          }
-        });
+      document.getElementById('button-confirmation').addEventListener('click', async () => {
+        // Uses async/await, you can also just use `.then`
+        const result = await modals.openModal('modal-content/confirm.html');
+
+        if(result.dismissed) {
+          alert('You dismissed the modal');
+        } else if(result.value === true) {
+          alert('You clicked yes');
+        } else {
+          alert('You clicked no');
+        }
       });
 
       document.getElementById('button-input').addEventListener('click', () => {
-        modals.openModal({
-          url: 'http://127.0.0.1:8080/modal-input.html',
-          dismissable: true
-        }).then(result => {
-          if(result.value) {
+        modals.openModal('modal-content/input.html', { dismissable: false }).then(result => {
+          if(result.dismissed) {
+            alert('You dismissed the modal');
+          } else if(typeof result.value === 'string') {
             alert(`Hi ${result.value}!`);
+          } else {
+            alert('You clicked cancel');
           }
         });
       });

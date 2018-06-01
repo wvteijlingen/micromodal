@@ -10,15 +10,14 @@
     "http-server": "^0.11.1",
     "rollup": "^0.59.4",
     "rollup-plugin-typescript2": "^0.14.0",
-    "typescript": "^2.8.3"
+    "rollup-plugin-terser": "^1.0.1",
+    "typescript": "^2.8.3",
+    "uglifycss": "^0.0.29"
   },
   "scripts": {
-    "build": "rollup -c && cp src/micromodal.css dist/micromodal.css",
+    "build": "rollup -c && uglifycss src/micromodal.css --output dist/micromodal.css",
     "watch": "rollup -c -w",
-    "serve-example": "yarn build && yarn http-server example",
+    "example": "yarn build && yarn http-server example",
     "prepare": "npm run-script build"
-  },
-  "dependencies": {
-    "rollup-plugin-terser": "^1.0.1"
   }
 }
